@@ -1,5 +1,6 @@
-package com.example.elasticsearchinteractiveservice;
+package com.example.elasticsearchinteractiveservice.controller;
 
+import com.example.elasticsearchinteractiveservice.service.ElasticsearchService;
 import com.example.elasticsearchinteractiveservice.model.Company;
 import com.example.elasticsearchinteractiveservice.model.CompanyUpdateRequest;
 import lombok.extern.slf4j.Slf4j;

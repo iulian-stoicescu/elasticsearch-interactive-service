@@ -1,4 +1,4 @@
-package com.example.elasticsearchinteractiveservice;
+package com.example.elasticsearchinteractiveservice.service;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch.core.BulkRequest;
