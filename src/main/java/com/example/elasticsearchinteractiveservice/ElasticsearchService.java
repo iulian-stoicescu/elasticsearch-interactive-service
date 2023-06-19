@@ -3,6 +3,7 @@ package com.example.elasticsearchinteractiveservice;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch.core.BulkRequest;
 import co.elastic.clients.elasticsearch.core.BulkResponse;
+import co.elastic.clients.elasticsearch.core.GetResponse;
 import co.elastic.clients.elasticsearch.core.MgetResponse;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
 import co.elastic.clients.elasticsearch.core.bulk.BulkResponseItem;
@@ -11,6 +12,8 @@ import com.example.elasticsearchinteractiveservice.model.Company;
 import com.example.elasticsearchinteractiveservice.model.CompanyUpdateRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -32,22 +35,20 @@ public class ElasticsearchService {
         this.elasticsearchClient = elasticsearchClient;
     }
 
-    public List<Company> searchCompaniesByDomain(String domain) {
+    public ResponseEntity<Company> searchCompanyByDomain(String domain) {
         try {
-            SearchResponse<Company> response = this.elasticsearchClient.search(searchRequestBuilder -> searchRequestBuilder
+            GetResponse<Company> response = this.elasticsearchClient.get(getReqeustBuilder -> getReqeustBuilder
                             .index(INDEX_NAME)
-                            .query(queryBuilder -> queryBuilder
-                                    .match(matchQueryBuilder -> matchQueryBuilder
-                                            .field("domain")
-                                            .query(domain)
-                                    )
-                            ),
-                    Company.class
-            );
-            return response.hits().hits().stream().map(Hit::source).collect(Collectors.toList());
+                            .id(domain),
+                    Company.class);
+            if (response.found()) {
+                return ResponseEntity.ok(response.source());
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            }
         } catch (IOException ex) {
             log.error("Exception thrown while searching for data: {}", ex.getMessage());
-            return List.of();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 

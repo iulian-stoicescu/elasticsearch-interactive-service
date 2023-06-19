@@ -4,6 +4,7 @@ import com.example.elasticsearchinteractiveservice.model.Company;
 import com.example.elasticsearchinteractiveservice.model.CompanyUpdateRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -25,8 +26,8 @@ public class Controller {
     }
 
     @GetMapping("/domain")
-    public List<Company> getDataByDomain(@RequestParam("value") String domain) {
-        return this.elasticsearchService.searchCompaniesByDomain(domain);
+    public ResponseEntity<Company> getDataByDomain(@RequestParam("value") String domain) {
+        return this.elasticsearchService.searchCompanyByDomain(domain);
     }
 
     @GetMapping("/phoneNumber")
