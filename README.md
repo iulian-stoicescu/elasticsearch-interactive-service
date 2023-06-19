@@ -72,6 +72,15 @@ Prerequisites: Installed Docker Desktop application and enabled Kubernetes
           the elasticsearch cluster. I've just decided to do it this way in order to better understand how the Java
           Client API works for elasticsearch
     - the GET endpoints were requested in the assignment
+        - for the GET by domain endpoint, I initially decided to make a GetRequest to elasticsearch given that
+          the `domain` is actually the id for the documents stored in elasticsearch. This would translate to a really
+          fast response to the user. However, there was a small note in the assignment that
+          said: `Human input data can be quite dirty. Make sure you account for that so that your storing and querying
+          strategies can accommodate incomplete or malformed input.` As a result, I modified the GetRequest to a
+          SearchRequest where I also set the `fuzziness` parameter to `AUTO`, which means that elasticsearch will
+          automatically determine an appropriate level of fuzziness based on the length of the term. As an example,
+          calling the api with `value=lealvidoeproductions.comm` would still return the company corresponding to this
+          domain `lealvideoproductions.com`
     - the PUT endpoint was created to be called from the other application named `veridion` to update the companies with
       the data extracted from the websites html pages
     - the DELETE endpoint was created just for testing purposes
