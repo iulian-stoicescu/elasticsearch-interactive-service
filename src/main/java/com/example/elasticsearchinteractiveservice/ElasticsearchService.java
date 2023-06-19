@@ -47,12 +47,12 @@ public class ElasticsearchService {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
             }
         } catch (IOException ex) {
-            log.error("Exception thrown while searching for data: {}", ex.getMessage());
+            log.error("Exception thrown while searchCompanyByDomain: {}", ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
-    public List<Company> searchCompaniesByPhoneNumber(String phoneNumber) {
+    public ResponseEntity<Company> searchCompanyByPhoneNumber(String phoneNumber) {
         try {
             SearchResponse<Company> response = this.elasticsearchClient.search(searchRequestBuilder -> searchRequestBuilder
                             .index(INDEX_NAME)
@@ -64,10 +64,15 @@ public class ElasticsearchService {
                             ),
                     Company.class
             );
-            return response.hits().hits().stream().map(Hit::source).collect(Collectors.toList());
+            List<Company> companyList = response.hits().hits().stream().map(Hit::source).toList();
+            if (companyList.size() > 0) {
+                return ResponseEntity.ok(companyList.get(0));
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            }
         } catch (IOException ex) {
-            log.error("Exception thrown while searching for data: {}", ex.getMessage());
-            return List.of();
+            log.error("Exception thrown while searchCompanyByPhoneNumber: {}", ex.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 

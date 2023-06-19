@@ -31,8 +31,8 @@ public class Controller {
     }
 
     @GetMapping("/phoneNumber")
-    public List<Company> getDataByPhoneNumber(@RequestParam("value") String phoneNumber) {
-        return this.elasticsearchService.searchCompaniesByPhoneNumber(phoneNumber);
+    public ResponseEntity<Company> getDataByPhoneNumber(@RequestParam("value") String phoneNumber) {
+        return this.elasticsearchService.searchCompanyByPhoneNumber(phoneNumber);
     }
 
     @PutMapping("/update")
