@@ -6,6 +6,7 @@ import com.example.elasticsearchinteractiveservice.model.CompanyUpdateRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -44,5 +45,10 @@ public class Controller {
     @PostMapping("/save")
     public void saveData() {
         this.elasticsearchService.persistInitialData();
+    }
+
+    @DeleteMapping("/delete")
+    public void deleteData(@RequestParam("value") String domain) {
+        this.elasticsearchService.deleteData(domain);
     }
 }

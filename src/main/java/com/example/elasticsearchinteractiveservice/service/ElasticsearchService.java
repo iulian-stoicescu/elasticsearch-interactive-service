@@ -127,6 +127,14 @@ public class ElasticsearchService {
         }
     }
 
+    public void deleteData(String domain) {
+        try {
+            this.elasticsearchClient.delete(deleteRequestBuilder -> deleteRequestBuilder.index(INDEX_NAME).id(domain));
+        } catch (IOException ex) {
+            log.error("Exception thrown while deleteData: {}", ex.getMessage());
+        }
+    }
+
     private List<Company> fetchCompanies() {
         Company company1 = new Company("domain value 1", "commercialName value 1", "legalName value 1", List.of("some name 1"), null, null, null);
         Company company2 = new Company("domain value 2", "commercialName value 2", "legalName value 2", List.of("some name 2"), null, null, null);
