@@ -3,16 +3,20 @@ package com.example.elasticsearchinteractiveservice;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch.core.BulkRequest;
 import co.elastic.clients.elasticsearch.core.BulkResponse;
+import co.elastic.clients.elasticsearch.core.MgetResponse;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
 import co.elastic.clients.elasticsearch.core.bulk.BulkResponseItem;
 import co.elastic.clients.elasticsearch.core.search.Hit;
 import com.example.elasticsearchinteractiveservice.model.Company;
+import com.example.elasticsearchinteractiveservice.model.CompanyUpdateRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -36,7 +40,6 @@ public class ElasticsearchService {
                                     .match(matchQueryBuilder -> matchQueryBuilder
                                             .field("domain")
                                             .query(domain)
-                                            .fuzziness("AUTO")
                                     )
                             ),
                     Company.class
@@ -48,11 +51,43 @@ public class ElasticsearchService {
         }
     }
 
+    public void updateCompanies(List<CompanyUpdateRequest> companyUpdateRequests) {
+        Map<String, CompanyUpdateRequest> idToUpdateRequestMap = companyUpdateRequests.stream()
+                .collect(Collectors.toMap(CompanyUpdateRequest::domain, Function.identity()));
+
+        try {
+            // first get the documents corresponding to the input ids
+            MgetResponse<Company> response = this.elasticsearchClient.mget(mGetRequest ->
+                    mGetRequest.index(INDEX_NAME).ids(List.copyOf(idToUpdateRequestMap.keySet())), Company.class);
+
+            // map the response to a list of companies
+            List<Company> fetchedCompanies = response.docs().stream().map(item -> item.result().source()).toList();
+            BulkRequest.Builder br = new BulkRequest.Builder();
+
+            // iterate over the list of companies and add an update operation for each one
+            for (Company company : fetchedCompanies) {
+                CompanyUpdateRequest updateRequest = idToUpdateRequestMap.get(company.domain());
+                Company newCompany = createCompany(company, updateRequest);
+                br.operations(operation -> operation.update(updateBuilder -> updateBuilder
+                        .index(INDEX_NAME)
+                        .id(newCompany.domain())
+                        .action(updateAction -> updateAction.doc(newCompany)))
+                );
+            }
+
+            // update the documents
+            BulkResponse bulkResponse = this.elasticsearchClient.bulk(br.build());
+            logBulkResponseErrors(bulkResponse);
+        } catch (IOException ex) {
+            log.error("Exception thrown while updating data: {}", ex.getMessage());
+        }
+    }
+
     public void persistInitialData() {
         List<Company> companies = fetchCompanies();
         BulkRequest.Builder br = new BulkRequest.Builder();
         for (Company company : companies) {
-            br.operations(operation -> operation.index(index -> index
+            br.operations(operation -> operation.index(indexBuilder -> indexBuilder
                     .index(INDEX_NAME)
                     .id(company.domain())
                     .document(company))
@@ -60,16 +95,8 @@ public class ElasticsearchService {
         }
 
         try {
-            BulkResponse result = this.elasticsearchClient.bulk(br.build());
-
-            if (result.errors()) {
-                log.error("Bulk had errors");
-                for (BulkResponseItem item : result.items()) {
-                    if (item.error() != null) {
-                        log.error(item.error().reason());
-                    }
-                }
-            }
+            BulkResponse bulkResponse = this.elasticsearchClient.bulk(br.build());
+            logBulkResponseErrors(bulkResponse);
         } catch (IOException ex) {
             log.error("Exception thrown while persisting data: {}", ex.getMessage());
         }
@@ -79,5 +106,28 @@ public class ElasticsearchService {
         Company company1 = new Company("domain value 1", "commercialName value 1", "legalName value 1", List.of("some name 1"), null, null, null);
         Company company2 = new Company("domain value 2", "commercialName value 2", "legalName value 2", List.of("some name 2"), null, null, null);
         return List.of(company1, company2);
+    }
+
+    private Company createCompany(Company company, CompanyUpdateRequest updateRequest) {
+        return new Company(
+                company.domain(),
+                company.commercialName(),
+                company.legalName(),
+                company.allAvailableName(),
+                updateRequest.phoneNumbers(),
+                updateRequest.socialMediaLinks(),
+                updateRequest.addresses()
+        );
+    }
+
+    private void logBulkResponseErrors(BulkResponse response) {
+        if (response.errors()) {
+            log.error("Bulk had errors");
+            for (BulkResponseItem item : response.items()) {
+                if (item.error() != null) {
+                    log.error(item.error().reason());
+                }
+            }
+        }
     }
 }
