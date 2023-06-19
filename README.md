@@ -48,8 +48,7 @@ Prerequisites: Installed Docker Desktop application and enabled Kubernetes
 4. Create the `Dockerfile` and `deployment.yaml` manifest file
     - for the docker image that we are building we need jdk 17 and decided to use `openjdk:17-jdk-slim`
     - related to the manifest file: again two resources, one `Deployment` and one `Service` that will expose this
-      application to the k8s cluster (so
-      we can actually call the API endpoints defined in `Controller.java`)
+      application to the k8s cluster (so we can actually call the API endpoints defined in `Controller.java`)
     - build the image:
       ```bash
       docker build -t elasticsearch-interactive-image .
@@ -76,6 +75,5 @@ Prerequisites: Installed Docker Desktop application and enabled Kubernetes
     - the PUT endpoint was created to be called from the other application named `veridion` to update the companies with
       the data extracted from the websites html pages
     - the DELETE endpoint was created just for testing purposes
-
 
 ## More details to be added...
