@@ -3,7 +3,6 @@ package com.example.elasticsearchinteractiveservice.service;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch.core.BulkRequest;
 import co.elastic.clients.elasticsearch.core.BulkResponse;
-import co.elastic.clients.elasticsearch.core.GetResponse;
 import co.elastic.clients.elasticsearch.core.MgetResponse;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
 import co.elastic.clients.elasticsearch.core.bulk.BulkResponseItem;
@@ -40,12 +39,20 @@ public class ElasticsearchService {
 
     public ResponseEntity<Company> searchCompanyByDomain(String domain) {
         try {
-            GetResponse<Company> response = this.elasticsearchClient.get(getReqeustBuilder -> getReqeustBuilder
+            SearchResponse<Company> response = this.elasticsearchClient.search(searchRequestBuilder -> searchRequestBuilder
                             .index(INDEX_NAME)
-                            .id(domain),
-                    Company.class);
-            if (response.found()) {
-                return ResponseEntity.ok(response.source());
+                            .query(queryBuilder -> queryBuilder
+                                    .match(matchQueryBuilder -> matchQueryBuilder
+                                            .field("domain")
+                                            .query(domain)
+                                            .fuzziness("AUTO")
+                                    )
+                            ),
+                    Company.class
+            );
+            List<Company> companies = response.hits().hits().stream().map(Hit::source).toList();
+            if (companies.size() > 0) {
+                return ResponseEntity.ok(companies.get(0));
             } else {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
             }
