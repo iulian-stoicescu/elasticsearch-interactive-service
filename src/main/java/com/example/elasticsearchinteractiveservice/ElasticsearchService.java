@@ -51,6 +51,25 @@ public class ElasticsearchService {
         }
     }
 
+    public List<Company> searchCompaniesByPhoneNumber(String phoneNumber) {
+        try {
+            SearchResponse<Company> response = this.elasticsearchClient.search(searchRequestBuilder -> searchRequestBuilder
+                            .index(INDEX_NAME)
+                            .query(queryBuilder -> queryBuilder
+                                    .term(termQueryBuilder -> termQueryBuilder
+                                            .field("phoneNumbers")
+                                            .value(phoneNumber)
+                                    )
+                            ),
+                    Company.class
+            );
+            return response.hits().hits().stream().map(Hit::source).collect(Collectors.toList());
+        } catch (IOException ex) {
+            log.error("Exception thrown while searching for data: {}", ex.getMessage());
+            return List.of();
+        }
+    }
+
     public void updateCompanies(List<CompanyUpdateRequest> companyUpdateRequests) {
         Map<String, CompanyUpdateRequest> idToUpdateRequestMap = companyUpdateRequests.stream()
                 .collect(Collectors.toMap(CompanyUpdateRequest::domain, Function.identity()));

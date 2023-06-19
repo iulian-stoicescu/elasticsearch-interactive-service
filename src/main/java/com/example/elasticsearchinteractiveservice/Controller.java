@@ -25,8 +25,13 @@ public class Controller {
     }
 
     @GetMapping("/domain")
-    public List<Company> getData(@RequestParam("value") String domain) {
+    public List<Company> getDataByDomain(@RequestParam("value") String domain) {
         return this.elasticsearchService.searchCompaniesByDomain(domain);
+    }
+
+    @GetMapping("/phoneNumber")
+    public List<Company> getDataByPhoneNumber(@RequestParam("value") String phoneNumber) {
+        return this.elasticsearchService.searchCompaniesByPhoneNumber(phoneNumber);
     }
 
     @PutMapping("/update")
