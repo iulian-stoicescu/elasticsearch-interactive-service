@@ -6,7 +6,7 @@ public record Company(
         String domain,
         String commercialName,
         String legalName,
-        List<String> allAvailableName,
+        List<String> allAvailableNames,
         List<String> phoneNumbers,
         List<String> socialMediaLinks,
         List<String> addresses

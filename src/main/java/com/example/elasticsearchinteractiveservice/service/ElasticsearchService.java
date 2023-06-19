@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -29,10 +30,12 @@ public class ElasticsearchService {
     private static final String INDEX_NAME = "companies";
 
     private final ElasticsearchClient elasticsearchClient;
+    private final HelperService helperService;
 
     @Autowired
-    public ElasticsearchService(ElasticsearchClient elasticsearchClient) {
+    public ElasticsearchService(ElasticsearchClient elasticsearchClient, HelperService helperService) {
         this.elasticsearchClient = elasticsearchClient;
+        this.helperService = helperService;
     }
 
     public ResponseEntity<Company> searchCompanyByDomain(String domain) {
@@ -86,7 +89,7 @@ public class ElasticsearchService {
                     mGetRequest.index(INDEX_NAME).ids(List.copyOf(idToUpdateRequestMap.keySet())), Company.class);
 
             // map the response to a list of companies
-            List<Company> fetchedCompanies = response.docs().stream().map(item -> item.result().source()).toList();
+            List<Company> fetchedCompanies = response.docs().stream().map(item -> item.result().source()).filter(Objects::nonNull).toList();
             BulkRequest.Builder br = new BulkRequest.Builder();
 
             // iterate over the list of companies and add an update operation for each one
@@ -136,9 +139,7 @@ public class ElasticsearchService {
     }
 
     private List<Company> fetchCompanies() {
-        Company company1 = new Company("domain value 1", "commercialName value 1", "legalName value 1", List.of("some name 1"), null, null, null);
-        Company company2 = new Company("domain value 2", "commercialName value 2", "legalName value 2", List.of("some name 2"), null, null, null);
-        return List.of(company1, company2);
+        return helperService.getCompaniesPartialData();
     }
 
     private Company createCompany(Company company, CompanyUpdateRequest updateRequest) {
@@ -146,7 +147,7 @@ public class ElasticsearchService {
                 company.domain(),
                 company.commercialName(),
                 company.legalName(),
-                company.allAvailableName(),
+                company.allAvailableNames(),
                 updateRequest.phoneNumbers(),
                 updateRequest.socialMediaLinks(),
                 updateRequest.addresses()

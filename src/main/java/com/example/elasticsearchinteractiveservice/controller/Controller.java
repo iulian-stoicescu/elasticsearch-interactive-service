@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @RestController
@@ -39,6 +40,7 @@ public class Controller {
 
     @PutMapping("/update")
     public void updateData(@RequestBody List<CompanyUpdateRequest> body) {
+        log.info("Updating companies with domains: {}", body.stream().map(CompanyUpdateRequest::domain).collect(Collectors.joining(", ")));
         this.elasticsearchService.updateCompanies(body);
     }
 
